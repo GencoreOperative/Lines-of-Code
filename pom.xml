@@ -82,14 +82,14 @@
                         </configuration>
                     </execution>
                     <execution>
-                        <id>build-loc-by-blame</id>
+                        <id>build-loc-authorship</id>
                         <phase>package</phase>
                         <goals><goal>run</goal></goals>
                         <configuration>
                             <target>
                                 <exec executable="${project.basedir}/executable.sh">
                                     <arg value="${project.build.directory}/${project.build.finalName}.jar"/>
-                                    <arg value="${project.basedir}/loc-by-blame"/>
+                                    <arg value="${project.basedir}/loc-authorship"/>
                                     <arg value="uk.org.gencoreoperative.lines.Main"/>
                                 </exec>
                             </target>

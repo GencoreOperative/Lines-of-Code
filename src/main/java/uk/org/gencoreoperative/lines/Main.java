@@ -40,7 +40,7 @@ import com.beust.jcommander.Parameter;
 import com.beust.jcommander.ParameterException;
 
 public class Main {
-    private static final String PROGRAM_NAME = "loc-by-blame";
+    private static final String PROGRAM_NAME = "loc-authorship";
 
     @Parameter(names = {"-n", "--name"}, description = "Author name to count lines for", required = true)
     private String user;
