@@ -24,6 +24,7 @@
 package uk.org.gencoreoperative.commits;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -45,8 +46,10 @@ import java.util.stream.Stream;
 public class RunProcess {
 
     private final ExecutorService service = Executors.newCachedThreadPool();
+    private final File workingDir;
 
-    public RunProcess() {
+    public RunProcess(File workingDir) {
+        this.workingDir = workingDir;
         Runtime.getRuntime().addShutdownHook(new Thread(service::shutdown));
     }
     /**
@@ -75,7 +78,7 @@ public class RunProcess {
     public Stream<String> run(boolean mergeStdoutError, String... args) {
         final Process p;
         try {
-            p = new ProcessBuilder(args).redirectErrorStream(mergeStdoutError).start();
+            p = new ProcessBuilder(args).directory(workingDir).redirectErrorStream(mergeStdoutError).start();
         } catch (IOException e) {
             throw new ProcessException("Failed to create process", e);
         }

@@ -25,6 +25,7 @@ package uk.org.gencoreoperative;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.io.File;
 import java.util.stream.Stream;
 
 import org.junit.Test;
@@ -33,7 +34,7 @@ import uk.org.gencoreoperative.commits.RunProcess;
 
 public class RunProcessTest {
 
-    private final RunProcess process = new RunProcess();
+    private final RunProcess process = new RunProcess(new File("."));
 
     @Test (expected = RunProcess.ProcessException.class)
     public void shouldFailWithBadger() {

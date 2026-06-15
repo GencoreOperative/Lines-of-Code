@@ -23,6 +23,7 @@
  */
 package uk.org.gencoreoperative.commits;
 
+import java.io.File;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -32,7 +33,11 @@ import java.util.stream.Collectors;
 
 public class Git {
     private static final String GIT = "/usr/bin/git";
-    private RunProcess run = new RunProcess();
+    private final RunProcess run;
+
+    public Git(File repoDir) {
+        this.run = new RunProcess(repoDir);
+    }
 
 
     private List<String> getAllCommits(String user) {

@@ -23,6 +23,7 @@
  */
 package uk.org.gencoreoperative.commits;
 
+import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -41,16 +42,12 @@ import com.beust.jcommander.ParameterException;
  */
 public class Main {
     public static final String PROGRAM_NAME = "loc-by-user";
-    @Parameter (names = {"-u", "--url"}, description = "SVN repository URL", required = false)
-    private String url;
-    @Parameter (names ={"-n", "--name"}, description = "The user to generate stats for", required = true)
+    @Parameter(names = {"-n", "--name"}, description = "The user to generate stats for", required = true)
     private String user;
-    @Parameter (names = {"-t", "--timeout"}, description = "How long to wait (in minutes) for git diff results", required = false)
-    private int timeout = 10;
-    @Parameter (names = {"-h", "--help"}, help = true)
+    @Parameter(names = {"-r", "--repo"}, description = "Path to the git repository", required = true)
+    private String repo;
+    @Parameter(names = {"-h", "--help"}, help = true)
     private boolean help = false;
-
-    private static final Git git = new Git();
 
 
     public static void main(String... args) {
@@ -67,6 +64,7 @@ public class Main {
             help(commander);
         }
 
+        Git git = new Git(new File(main.repo));
         List<Result> results = git.getAllResults(main.user);
 
         results.sort(Comparator.comparing(Result::getDate));
