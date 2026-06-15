@@ -27,8 +27,6 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.nio.file.Files;
-import java.util.Collections;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -61,27 +59,15 @@ public class Authors {
         }
 
         File sourceFolder = new File(authors.repo);
-        Set<String> names = Collections.synchronizedSortedSet(new TreeSet<>());
-        Files.walk(sourceFolder.toPath())
-                .filter(Files::isRegularFile)
-                .filter(path -> path.toString().endsWith(".java"))
-                .parallel()
-                .forEach(path -> {
-                    try {
-                        ProcessBuilder pb = new ProcessBuilder("git", "blame", "--line-porcelain", path.toString());
-                        pb.directory(sourceFolder);
-                        pb.redirectErrorStream(true);
-                        Process p = pb.start();
-                        try (BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream()))) {
-                            reader.lines()
-                                    .filter(line -> line.startsWith("author "))
-                                    .map(line -> line.substring(7))
-                                    .forEach(names::add);
-                        }
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                });
+        Set<String> names = new TreeSet<>();
+
+        ProcessBuilder pb = new ProcessBuilder("git", "log", "--format=%an", "--all");
+        pb.directory(sourceFolder);
+        pb.redirectErrorStream(true);
+        Process p = pb.start();
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream()))) {
+            reader.lines().forEach(names::add);
+        }
 
         names.forEach(System.out::println);
     }
