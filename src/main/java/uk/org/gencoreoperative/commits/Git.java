@@ -24,8 +24,6 @@
 package uk.org.gencoreoperative.commits;
 
 import java.io.File;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
@@ -47,27 +45,20 @@ public class Git {
     }
 
     private Result getResult(String revision) {
-        // Process Date
-        SimpleDateFormat format = new SimpleDateFormat("EEE MMM dd HH:mm:ss yyyy");
-        Optional<Date> date = run.run(GIT, "show", revision)
-                .filter(l -> l.startsWith("Date:"))
-                .map(l -> l.substring("Date:".length()))
+        Optional<Date> date = run.run(true, GIT, "show", "--format=%at", "--no-patch", revision)
                 .map(String::trim)
-                .map(l -> parse(format, l))
+                .filter(l -> l.matches("\\d+"))
+                .map(l -> new Date(Long.parseLong(l) * 1000L))
                 .findAny();
         if (!date.isPresent()) throw new IllegalStateException();
 
-        // Process Additions
-        long additions = run.run(GIT, "show", revision)
+        // Process Additions and Deletions in a single git show call
+        List<String> diffLines = run.run(true, GIT, "show", "--no-renames", revision)
                 .map(String::trim)
-                .filter(l -> l.startsWith("+"))
-                .count();
+                .collect(Collectors.toList());
+        long additions = diffLines.stream().filter(l -> l.startsWith("+")).count();
+        long deletions = diffLines.stream().filter(l -> l.startsWith("-")).count();
 
-        // Process Deletions
-        long deletions = run.run(GIT, "show", revision)
-                .map(String::trim)
-                .filter(l -> l.startsWith("-"))
-                .count();
         return new Result(date.get(), additions, deletions);
     }
 
@@ -76,11 +67,5 @@ public class Git {
         return allCommits.stream().map(this::getResult).collect(Collectors.toList());
     }
 
-    private static Date parse(SimpleDateFormat format, String s) {
-        try {
-            return format.parse(s);
-        } catch (ParseException e) {
-            throw new IllegalStateException(e);
-        }
-    }
+
 }

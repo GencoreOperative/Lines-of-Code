@@ -29,11 +29,12 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.nio.file.Files;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
@@ -70,13 +71,12 @@ public class Main {
         AtomicInteger userLines = new AtomicInteger(0);
         File sourceFolder = new File(main.repo);
         String user = main.user;
-        Files.walk(sourceFolder.toPath())
-                .filter(Files::isRegularFile)
-                .filter(path -> path.toString().endsWith(".java"))
-                .parallel()
-                .forEach(path -> {
+
+        List<String> trackedFiles = getTrackedFiles(sourceFolder);
+        trackedFiles.parallelStream()
+                .forEach(file -> {
                     try {
-                        Map<String, Integer> map = countNames(sourceFolder, path.toString());
+                        Map<String, Integer> map = countNames(sourceFolder, file);
 
                         // Compute the total lines from the count
                         int fileTotal = total(map.values());
@@ -88,13 +88,23 @@ public class Main {
                             System.out.println(format("{0}\t{1}\t{2}",
                                     Integer.toString(map.get(user)),
                                     Integer.toString(fileTotal),
-                                    path));
+                                    file));
                         }
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
                 });
         System.out.println(format("User: {0}\nTotal: {1}", userLines, totalLines));
+    }
+
+    private static List<String> getTrackedFiles(File repoDir) throws IOException {
+        ProcessBuilder pb = new ProcessBuilder("git", "ls-files");
+        pb.directory(repoDir);
+        pb.redirectErrorStream(true);
+        Process p = pb.start();
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream()))) {
+            return reader.lines().collect(Collectors.toList());
+        }
     }
 
     private static int total(Collection<Integer> values) {
@@ -104,7 +114,6 @@ public class Main {
     private static Map<String, Integer> countNames(File folder, String fileName) throws IOException {
         Map<String, Integer> counts = new HashMap<>();
 
-        // How to set working directory?
         ProcessBuilder pb = new ProcessBuilder("git", "blame", "--line-porcelain", fileName);
         pb.directory(folder);
         pb.redirectErrorStream(true);
